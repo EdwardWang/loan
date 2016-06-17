@@ -32,7 +32,7 @@ loan_t *loan_init(double capital,double *year_rate,int year, calc_loan_per_month
         l->capital = capital;
         l->term = term;
         l->loan_per_month = (struct loan_per_month_s*)(l+1); //loan_per_month没有主动指向申请的空间
-        l->year_rate = (double *)(l->loan_per_month+term);
+        l->year_rate = (double *)(l->loan_per_month+term);  //操作此类内存的时候最好将指针变为char*,这样不容易错
         memcpy(l->year_rate,year_rate,sizeof(double)*year);
         memset(l->loan_per_month,0,sizeof(struct loan_per_month_s)*term);
         payment(l,calc_pf);
