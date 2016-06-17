@@ -3,5 +3,5 @@
 double p_i(double capital,double year_rate,int term)
 {
     double month_rate = year_rate/12;
-    return ( capital * (1+month_rate) * pow(1+month_rate, term) / (pow(1+month_rate,term)-1) );
+    return ( capital * month_rate * pow(1+month_rate, term) / (pow(1+month_rate,term)-1) );
 }

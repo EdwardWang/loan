@@ -31,7 +31,8 @@ loan_t *loan_init(double capital,double *year_rate,int year, calc_loan_per_month
     if (l != NULL) {
         l->capital = capital;
         l->term = term;
-        l->year_rate = (double *)(l->loan_per_month+sizeof(struct loan_per_month_s)*term);
+        l->loan_per_month = (struct loan_per_month_s*)(l+1); //loan_per_month没有主动指向申请的空间
+        l->year_rate = (double *)(l->loan_per_month+term);
         memcpy(l->year_rate,year_rate,sizeof(double)*year);
         memset(l->loan_per_month,0,sizeof(struct loan_per_month_s)*term);
         payment(l,calc_pf);
@@ -53,11 +54,16 @@ static void payment(loan_t *loan,calc_loan_per_month calc_pf)
         cur_month_interest = capital*(loan->year_rate[i/12]/12);
         cur_month_capital = pay_per_month-cur_month_interest;
         capital -= cur_month_capital;
-
         loan->loan_per_month[i].return_capital = cur_month_capital;
         loan->loan_per_month[i].interest = cur_month_interest;
         loan->loan_per_month[i].left_capital = capital;
-        loan->loan_per_month[i].left_total = calc_pf(capital,loan->year_rate[(i+1)/12], loan->term-i-1);
+        //printf输出的时候程序输出了nan,
+        //nan 0.0/0.0，＋Inf 1.0/0.0, -Inf -1.0/0.0
+        if ((loan->term-i-1) != 0)
+            loan->loan_per_month[i].left_total = calc_pf(capital,loan->year_rate[(i+1)/12],
+                                                    loan->term-i-1) * (loan->term-i-1);
+        else 
+            loan->loan_per_month[i].left_total = 0;
     }
 }
 
@@ -78,10 +84,10 @@ double get_total_until_n_term(loan_t *loan, int n, double *left_total)
 void print_loan_info(loan_t *loan)
 {
     int i;
-    printf("%20s%20s%20s%20s%20s%20s\n", "term","month pay", "month interest",
+    printf("%-20s%-20s%-20s%-20s%-20s%-20s\n", "term","month pay", "month interest",
             "month capital", "left capital", "left total");
     for (i = 0; i < loan->term; i++) {
-        printf("%20d%20f%20f%20f%20f%20f\n",(i+1), loan->loan_per_month[i].interest+loan->loan_per_month[i].return_capital,
+        printf("%-20d%-20.2f%-20.2f%-20.2f%-20.2f%-20.2f\n",(i+1), loan->loan_per_month[i].interest+loan->loan_per_month[i].return_capital,
                loan->loan_per_month[i].interest, loan->loan_per_month[i].return_capital,
                loan->loan_per_month[i].left_capital, loan->loan_per_month[i].left_total);
     }    
