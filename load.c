@@ -21,10 +21,14 @@ struct loan_s{
 static void payment(loan_t *loan,calc_loan_per_month calc_pf);
 //year就是年利率数组的个数
 //第四个参数是计算贷款信息的函数
-loan_t *loan_init(double capital,double *year_rate,int year, calc_loan_per_month calc_pf)
+loan_t *loan_init(double capital,double *year_rate,int term, calc_loan_per_month calc_pf)
 {
     struct loan_s *l = NULL;
-    int term = year * 12;
+    int year;
+    if (term % 12 == 0)
+       year = term / 12;
+    else 
+       year = term/12 + 1;
 
     l = (struct loan_s*)malloc(sizeof(struct loan_s) + 
                 sizeof(struct loan_per_month_s) * term + sizeof(double) * year);
@@ -91,4 +95,28 @@ void print_loan_info(loan_t *loan)
                loan->loan_per_month[i].interest, loan->loan_per_month[i].return_capital,
                loan->loan_per_month[i].left_capital, loan->loan_per_month[i].left_total);
     }    
+}
+
+//提前还款
+//money:提前还款额度
+//term:已还期数,相对值
+//返回老的与新计算的还款总额差值
+loan_t *prepayment(loan_t *loan, double money,int term, calc_loan_per_month calc_pf)
+{
+    int i,len;
+    struct loan_s *newcopy;
+    double rate[30];
+
+    len = term/12;
+    for (i = term/12; i < (loan->term/12); i++) {
+        rate[i-len] = loan->year_rate[i];
+    }
+    newcopy = loan_init(loan->loan_per_month[term-1].left_capital - money, rate, loan->term -term, calc_pf);
+    return newcopy;
+}
+
+//任意一期的剩余总额
+double loans_left_total(loan_t *loan, int term)
+{
+    return loan->loan_per_month[term-1].left_total;
 }
