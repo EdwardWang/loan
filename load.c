@@ -3,13 +3,6 @@
 #include <string.h>
 #include "load.h"
 
-struct loan_per_month_s{
-    double return_capital;                     //每月还的本金
-    double interest;                           //每月还的利息
-    double left_total;                         //每月剩余总额
-    double left_capital;                       //每月剩余本金
-};
-
 struct loan_s{
     double capital;                            //贷款总额
     int term;                                  //期数，每个月为1期
@@ -42,6 +35,13 @@ loan_t *loan_init(double capital,double *year_rate,int term, calc_loan_per_month
         payment(l,calc_pf);
     }
     return l;
+}
+
+void loan_free(loan_t *loan)
+{
+    loan->year_rate = NULL;
+    loan->loan_per_month = NULL;
+    free(loan);
 }
 
 static void payment(loan_t *loan,calc_loan_per_month calc_pf)
@@ -119,4 +119,11 @@ loan_t *prepayment(loan_t *loan, double money,int term, calc_loan_per_month calc
 double loans_left_total(loan_t *loan, int term)
 {
     return loan->loan_per_month[term-1].left_total;
+}
+
+int loan_get_detail_info(loan_t *loan,struct loan_per_month_s **per_month_info, int *n)
+{
+   *per_month_info = loan->loan_per_month;
+   *n = loan->term;
+   return 0;
 }
